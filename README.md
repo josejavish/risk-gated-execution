@@ -15,13 +15,13 @@ This repository implements the **Risk-Gated Execution** pattern:
 2. **The RiskGate (Python):** A middleware that evaluates the intent against a policy and dynamic evidence, emitting a cryptographically signed receipt (using RFC 8785 JSON Canonicalization).
 3. **The Broker (Rust):** An out-of-process `stdio` interceptor that wraps the execution tool. It verifies the Ed25519 signature, the TTL, and the authorization policy before allowing the payload to pass.
 
-### Elite Kernel-Level Isolation
-Beyond cryptographic verification, the Rust broker enforces military-grade OS boundaries around the untrusted LLM actuator:
-- **Air-Gapped Execution:** The actuator is spawned inside isolated Linux Namespaces (`CLONE_NEWIPC | CLONE_NEWUTS | CLONE_NEWNET`), mathematically preventing network data exfiltration.
-- **Privilege Abdication:** Drops `root` privileges via `setuid/setgid` inside the `pre_exec` hook to prevent Confused Deputy privilege escalation.
-- **Resource Exhaustion Prevention:** Enforces strict `setrlimit` boundaries (max processes, max memory) to neutralize Fork Bomb DoS attacks.
-- **Zombie Process Elimination:** Utilizes `prctl(PR_SET_PDEATHSIG)` to guarantee the LLM process is instantly killed by the OS if the security broker terminates.
-- **Concurrency Hardening:** Employs a Two-Phase Commit / Optimistic Locking strategy in a `BTreeMap` to prevent Time-of-Check to Time-of-Use (TOCTOU) replay attacks.
+### OS-Level Process Isolation
+Beyond cryptographic verification, the Rust broker enforces strict OS boundaries around the untrusted LLM actuator:
+- **Network Isolation:** The actuator is spawned inside isolated Linux Namespaces (`CLONE_NEWIPC | CLONE_NEWUTS | CLONE_NEWNET`), preventing network access from the child process.
+- **Privilege Drop:** Drops `root` privileges via `setuid/setgid` inside the `pre_exec` hook to prevent Confused Deputy privilege escalation.
+- **Resource Limits:** Enforces strict `setrlimit` boundaries (max processes, max memory) to mitigate Fork Bomb DoS attacks.
+- **Process Lifecycle:** Utilizes `prctl(PR_SET_PDEATHSIG)` to ensure the LLM process is killed by the OS if the security broker terminates.
+- **Concurrency Control:** Employs an Optimistic Locking strategy in a `BTreeMap` to prevent Time-of-Check to Time-of-Use (TOCTOU) replay attacks.
 
 ## Enterprise Use Cases
 This architecture is designed for environments where probabilistic failures are unacceptable:

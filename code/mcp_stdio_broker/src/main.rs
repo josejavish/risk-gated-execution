@@ -121,10 +121,10 @@ async fn main() {
                 eprintln!("CRITICAL WARNING: Could not unshare namespaces (Requires CAP_SYS_ADMIN). In production, this MUST abort to prevent Fail-Open execution. Proceeding for local demo only.");
             }
 
-            // Elite Security: Kernel-level Zombie process prevention (Pacto de Suicidio)
+            // Kernel-level Zombie process prevention
             libc::prctl(libc::PR_SET_PDEATHSIG, libc::SIGKILL);
 
-            // Elite Security: Fork Bomb and Memory Exhaustion Prevention
+            // Fork Bomb and Memory Exhaustion Prevention
             let rlimit_nproc = libc::rlimit {
                 rlim_cur: 100, // Max processes
                 rlim_max: 100,
@@ -137,7 +137,7 @@ async fn main() {
             };
             libc::setrlimit(libc::RLIMIT_AS, &rlimit_as);
             
-            // Elite PrivEsc Prevention: Drop root privileges before exec if running as root.
+            // Privilege Drop: Drop root privileges before exec if running as root.
             if libc::geteuid() == 0 {
                 // In production, fetch UID/GID from config. Using 1000 as standard unprivileged user.
                 let target_uid = std::env::var("RGE_CHILD_UID").unwrap_or_else(|_| "1000".to_string()).parse::<u32>().unwrap_or(1000);

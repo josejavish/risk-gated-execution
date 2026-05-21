@@ -141,7 +141,7 @@ To address that, I built a Rust `stdio` broker:
 - policy is hot-reloaded through an RCU-style `ArcSwap` snapshot;
 - input and child-output frames are bounded with `tokio_util::codec::LinesCodec` to avoid unbounded buffer OOM;
 - blocked calls return JSON-RPC errors instead of reaching the actuator.
-- the child process is violently sandboxed using Linux Namespaces (`CLONE_NEWNET`, `CLONE_NEWIPC`), strict resource limits (`rlimit`), privilege dropping (`setuid`), and OS-enforced termination (`PDEATHSIG`).
+- the child process is strictly sandboxed using Linux Namespaces (`CLONE_NEWNET`, `CLONE_NEWIPC`), strict resource limits (`rlimit`), privilege dropping (`setuid`), and OS-enforced termination (`PDEATHSIG`).
 
 The local broker is no longer just a boundary for tool-call authorization; it is a full cryptographic and kernel-level execution sandbox.
 

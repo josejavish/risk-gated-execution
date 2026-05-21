@@ -14,7 +14,7 @@ The implementation achieves severe isolation between the untrusted agent reasoni
 
 **Status:** Secured & Hardened.
 
-- **Payload Canonicalization:** Upgraded to strict RFC 8785 (JSON Canonicalization Scheme) in both Python (RiskGate) and Rust (Broker) to mathematically eliminate serialization mutation and parsing ambiguity attacks.
+- **Payload Canonicalization:** Upgraded to strict RFC 8785 (JSON Canonicalization Scheme) in both Python (RiskGate) and Rust (Broker) to prevent serialization mutation and parsing ambiguity attacks.
 - **Out-of-Band Validation:** The LLM actuator never handles the cryptographic receipt. The receipt is negotiated and attached transparently by the orchestration middleware, preserving agent prompt context and preventing signature manipulation.
 - **Pinning:** The vertical slice explicitly pins the trusted Evidence Provider public key. Self-signed or unauthenticated evidence envelopes are deterministically rejected.
 

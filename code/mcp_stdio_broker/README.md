@@ -14,7 +14,7 @@ boundary described in the Risk-Gated Execution article.
 - **Receipt Binding:** Verifies Ed25519 signatures over intent ID, action, target, payload, evidence digest, and timestamp.
 - **Dynamic Policy:** Enforces authorized targets, allowed actions, forbidden actions, and optional receipt TTL from a hot-reloaded policy file.
 - **OOM Protection:** Uses `tokio_util::codec::FramedRead` with a strict 10MB limit on inbound and child-output JSON-RPC lines.
-- **Elite OS Isolation:** The child process is air-gapped from the network (`CLONE_NEWNET`), isolated from IPC/UTS namespaces, stripped of root privileges (`setuid`), restricted by strict `rlimit` boundaries, and linked to a kernel suicide pact (`PDEATHSIG`) to prevent zombie leaks.
+- **OS-Level Isolation:** The child process is isolated from the network (`CLONE_NEWNET`), isolated from IPC/UTS namespaces, stripped of root privileges (`setuid`), restricted by strict `rlimit` boundaries, and linked to a kernel termination signal (`PDEATHSIG`) to prevent zombie leaks.
 - **Autonomous Control Loop:** Uses `notify` and `arc-swap` to hot-reload Kubernetes ConfigMap policy changes (RCU Epochs) in microseconds without restarting the broker or dropping connections.
 - **API Tiering Hook:** Blocks obvious destructive transactional payloads without `dry_run: true` and returns `Suspend` for non-transactional side effects that lack human quorum fields.
 
