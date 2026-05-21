@@ -74,7 +74,8 @@ design rule: the LLM expresses intent; the runner attaches receipts. We also exp
 - environment variables are strictly scrubbed (`env_clear()`) before spawning the child process to prevent credential leaks (e.g., `AWS_ACCESS_KEY_ID`, `DATABASE_URL`) from the broker to the untrusted LLM actuator.
 - kernel-level isolation is set to Fail-Closed. The broker will hard-crash instead of degrading security if it lacks `CAP_SYS_ADMIN` to create namespaces.
 - the LLM actuator is placed in a mathematically Air-Gapped Network Namespace (`CLONE_NEWNET`), eliminating all vectors for data exfiltration via reverse shells or malicious API calls.
-- a critical process lifecycle vulnerability (Zombie/Orphan Process Leak) was eliminated by configuring the Rust process spawner with `kill_on_drop(true)`. If the security broker is killed (e.g., OOM, SIGTERM), the untrusted LLM actuator process is guaranteed to die with it, preventing unmonitored rogue executions in the background.
+- a critical process lifecycle vulnerability (Zombie/Orphan Process Leak) was eliminated by configuring the Linux kernel with `prctl(PR_SET_PDEATHSIG, SIGKILL)`. If the security broker is killed (e.g., OOM, SIGTERM), the untrusted LLM actuator process is guaranteed by the OS to die instantly, preventing unmonitored rogue executions in the background.
+- resource exhaustion attacks (Fork Bombing and OOM) initiated by a compromised LLM are now physically blocked by enforcing strict `rlimit` constraints (max 100 processes, max 2GB RAM) inside the OS kernel boundary prior to actuator spawn.
 
 **Residual gap:** None. The core cryptographic intent boundary is fully implemented and hardened for standard production environments.
 

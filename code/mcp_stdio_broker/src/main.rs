@@ -120,6 +120,22 @@ async fn main() {
             if libc::unshare(flags) != 0 {
                 eprintln!("CRITICAL WARNING: Could not unshare namespaces (Requires CAP_SYS_ADMIN). In production, this MUST abort to prevent Fail-Open execution. Proceeding for local demo only.");
             }
+
+            // Elite Security: Kernel-level Zombie process prevention (Pacto de Suicidio)
+            libc::prctl(libc::PR_SET_PDEATHSIG, libc::SIGKILL);
+
+            // Elite Security: Fork Bomb and Memory Exhaustion Prevention
+            let rlimit_nproc = libc::rlimit {
+                rlim_cur: 100, // Max processes
+                rlim_max: 100,
+            };
+            libc::setrlimit(libc::RLIMIT_NPROC, &rlimit_nproc);
+
+            let rlimit_as = libc::rlimit {
+                rlim_cur: 1024 * 1024 * 1024 * 2, // 2GB memory limit
+                rlim_max: 1024 * 1024 * 1024 * 2,
+            };
+            libc::setrlimit(libc::RLIMIT_AS, &rlimit_as);
             
             // Elite PrivEsc Prevention: Drop root privileges before exec if running as root.
             if libc::geteuid() == 0 {
