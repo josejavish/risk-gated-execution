@@ -24,6 +24,13 @@ jcs-canonicalize = "0.1.0"
 serde_jcs = "0.2.0"
 lru = "0.18.0"
 
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+opt-level = 3
+
 [[bin]]
 name = "print_sig"
 path = "print_sig.rs"
