@@ -21,6 +21,13 @@ Beyond cryptographic verification, the Rust broker enforces military-grade OS bo
 - **Zombie Process Elimination:** Utilizes `prctl(PR_SET_PDEATHSIG)` to guarantee the LLM process is instantly killed by the OS if the security broker terminates.
 - **Concurrency Hardening:** Employs a Two-Phase Commit / Optimistic Locking strategy in a `BTreeMap` to prevent Time-of-Check to Time-of-Use (TOCTOU) replay attacks.
 
+## Enterprise Use Cases
+This architecture bridges the gap between AI lab demos and Fortune 500 compliance. It is designed for high-stakes environments where probabilistic failures are unacceptable:
+
+- **Automated Incident Remediation (SRE):** An autonomous agent diagnoses a production outage and decides to restart a core database. Before the execution tool runs, the RiskGate intercepts the intent, verifies that a Sev-1 incident is actually active in PagerDuty, confirms we are not in a global change freeze, and ensures a rollback snapshot receipt is attached.
+- **Autonomous Cloud Provisioning (Platform/FinOps):** A DevOps agent tasked with scaling infrastructure attempts to provision 50 new GPU instances. The gate pauses execution, validating the intent against real-time budget APIs and Datadog load metrics, blocking the action if it breaches the daily CapEx limit without a cryptographic human-approval receipt.
+- **FinTech Customer Support (Operations):** A support agent is authorized to issue refunds. The RiskGate evaluates the intent, checks the user's fraud score via an external Evidence Provider, and utilizes the broker's in-memory Idempotency Cache to guarantee that a network stutter won't result in a double-spend Replay Attack.
+
 ## Repository Structure
 
 - `code/deployment_agent_vertical_slice/`: A complete Python demo of a deployment agent integrating the RiskGate. Includes a red-team suite demonstrating mitigated attacks.
