@@ -105,6 +105,8 @@ async fn main() {
 
     let mut command = Command::new(target_cmd);
     command
+        .env_clear() // Elite Security: Scrub environment variables to prevent credential leaks to the untrusted LLM actuator
+        .env("PATH", env::var("PATH").unwrap_or_default()) // Only pass explicit safe variables
         .args(target_args)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
