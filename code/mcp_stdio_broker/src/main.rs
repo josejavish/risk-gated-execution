@@ -4,8 +4,7 @@ mod models;
 use arc_swap::ArcSwap;
 use futures::StreamExt;
 use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
-use lru::LruCache;
-use std::num::NonZeroUsize;
+use std::collections::BTreeMap;
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -60,7 +59,7 @@ async fn main() {
     let target_args = &args[2..];
 
     // Idempotency Cache to prevent Short-Window Replay Attacks
-    let nonce_cache: Arc<Mutex<LruCache<String, ()>>> = Arc::new(Mutex::new(LruCache::new(NonZeroUsize::new(10000).unwrap())));
+    let nonce_cache: Arc<Mutex<BTreeMap<i64, Vec<String>>>> = Arc::new(Mutex::new(BTreeMap::new()));
 
     // RCU Epochs (Lock-Free Hot Reloading)
     // The policy is stored in an ArcSwap, allowing the worker threads to pull
@@ -178,21 +177,40 @@ async fn main() {
                                     // We emit structured logs linking the LLM intent ID to the kernel enforcement
                                     tracing::info!(intent_id = %receipt.intent_id, tool = %params.name, "Verifying cryptographic receipt for tool");
 
+                                    // Clone data for the blocking thread to prevent CPU Starvation on the async executor
+                                    let receipt_clone = receipt.clone();
+                                    let name_clone = params.name.clone();
+                                    let args_clone = params.arguments.clone();
+                                    let config_clone = current_config.clone();
+                                    
                                     // Idempotency Check (Short-Window Replay Attack Prevention)
-                                    let mut cache = nonce_cache_clone.lock().unwrap();
-                                    if cache.contains(&receipt.intent_id) {
-                                        tracing::warn!(intent_id = %receipt.intent_id, "Verification BLOCKED: Replay Attack Detected");
-                                        error_msg = format!("RiskGate Blocked: Replay Attack Detected (intent_id {} already executed)", receipt.intent_id);
+                                    let mut is_replay = false;
+                                    {
+                                        let cache = nonce_cache_clone.lock().unwrap();
+                                        if cache.values().any(|v| v.contains(&receipt_clone.intent_id)) {
+                                            is_replay = true;
+                                        }
+                                    }
+
+                                    if is_replay {
+                                        tracing::warn!(intent_id = %receipt_clone.intent_id, "Verification BLOCKED: Replay Attack Detected");
+                                        error_msg = format!("RiskGate Blocked: Replay Attack Detected (intent_id {} already executed)", receipt_clone.intent_id);
                                     } else {
-                                        match crypto::verify_receipt(
-                                            receipt,
-                                            &params.name,
-                                            &params.arguments,
-                                            &current_config,
-                                        ) {
+                                        // Offload heavy cryptographic signature verification to a blocking thread pool
+                                        let decision = tokio::task::spawn_blocking(move || {
+                                            crypto::verify_receipt(&receipt_clone, &name_clone, &args_clone, &config_clone)
+                                        }).await.unwrap();
+
+                                        match decision {
                                             crypto::GateDecision::Allow => {
                                                 tracing::info!(intent_id = %receipt.intent_id, "Verification SUCCESS. RiskGate Approved.");
-                                                cache.put(receipt.intent_id.clone(), ());
+                                                let mut cache = nonce_cache_clone.lock().unwrap();
+                                                cache.entry(receipt.timestamp).or_insert_with(Vec::new).push(receipt.intent_id.clone());
+                                                
+                                                // Deterministically prune expired nonces
+                                                let expire_time = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs() as i64 - current_config.evidence_ttl_seconds;
+                                                cache.retain(|&ts, _| ts >= expire_time);
+                                                
                                                 allow = true;
                                             }
                                             crypto::GateDecision::Block(reason) => {
