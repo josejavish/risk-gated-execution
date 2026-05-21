@@ -41,11 +41,13 @@ class GateDecision:
 
 class DeploymentRiskGate:
     def __init__(self, policy: dict[str, Any] | None = None) -> None:
+        """Initializes the RiskGate with an optional policy override, establishing the trust root for the current execution epoch."""
         self.policy = {**DEFAULT_POLICY, **(policy or {})}
         self.keypair = risk_gate_keypair()
 
     @property
     def broker_policy(self) -> dict[str, Any]:
+        """Generates the policy configuration structure expected by the Rust MCP broker for hot-reloading."""
         return {
             **self.policy,
             "public_key_b64": self.keypair.public_key_b64,
@@ -89,10 +91,12 @@ class DeploymentRiskGate:
         }
 
     def write_broker_policy(self, path: Path) -> None:
+        """Persists the broker policy to disk, simulating the control plane distributing constraints to the data plane."""
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(self.broker_policy, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
     def evaluate(self, intent: dict[str, Any], signed_evidence: dict[str, Any]) -> GateDecision:
+        """Evaluates an agent intent against the current policy and cryptographic evidence, issuing a receipt if all constraints are met."""
         try:
             self._validate_intent_shape(intent)
             evidence = self._validate_evidence(signed_evidence)
@@ -103,6 +107,7 @@ class DeploymentRiskGate:
             return GateDecision(allowed=False, reason=str(exc), receipt=None)
 
     def _validate_intent_shape(self, intent: dict[str, Any]) -> None:
+        """Ensures the intent payload conforms to the expected schema before cryptographic processing."""
         required = {"intent_id", "action_type", "target", "arguments"}
         missing = sorted(required - set(intent))
         if missing:
@@ -111,6 +116,7 @@ class DeploymentRiskGate:
             raise RiskGateBlocked("intent arguments must be an object")
 
     def _validate_evidence(self, signed_evidence: dict[str, Any]) -> dict[str, Any]:
+        """Verifies the cryptographic signature and freshness (TTL) of the provided execution evidence."""
         document = signed_evidence.get("document")
         signature = signed_evidence.get("signature")
         public_key_b64 = signed_evidence.get("public_key_b64")
@@ -133,6 +139,7 @@ class DeploymentRiskGate:
         return document
 
     def _validate_policy(self, intent: dict[str, Any], evidence: dict[str, Any]) -> None:
+        """Evaluates the semantic content of the intent and evidence against organizational business rules."""
         action = intent["action_type"]
         target = intent["target"]
         args = intent["arguments"]
@@ -157,6 +164,7 @@ class DeploymentRiskGate:
             raise RiskGateBlocked("deployment requires dry_run=true before commit")
 
     def _issue_receipt(self, intent: dict[str, Any], signed_evidence: dict[str, Any]) -> dict[str, Any]:
+        """Generates the final Ed25519-signed receipt binding the validated intent and evidence."""
         timestamp = int(time.time())
         evidence_digest = signed_evidence["digest"]
         binding = receipt_binding(
@@ -178,6 +186,7 @@ class DeploymentRiskGate:
 
 
 def default_deploy_intent() -> dict[str, Any]:
+    """Provides a deterministic mock intent payload for the reproducible deployment demo."""
     return {
         "intent_id": f"deploy-{int(time.time())}",
         "action_type": "deploy",

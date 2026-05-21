@@ -54,6 +54,7 @@ PROFILES: dict[str, dict[str, Any]] = {
 
 
 def collect_signed_evidence(profile: str = "healthy", ttl_seconds: int = 60) -> dict[str, Any]:
+    """Generates and cryptographically signs an evidence envelope simulating dynamic system state (health, incident freeze, etc.)."""
     if profile not in PROFILES:
         raise ValueError(f"Unknown evidence profile: {profile}")
 

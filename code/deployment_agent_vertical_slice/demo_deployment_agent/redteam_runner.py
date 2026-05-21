@@ -18,6 +18,7 @@ ATTACKS_DIR = ROOT / "attacks"
 
 
 def load_attack_specs() -> list[dict[str, Any]]:
+    """Loads the deterministic JSON adversarial payloads used to validate the RiskGate's attack surface."""
     return [
         json.loads(path.read_text(encoding="utf-8"))
         for path in sorted(ATTACKS_DIR.glob("*.json"))
@@ -30,6 +31,7 @@ def manual_receipt(
     evidence_digest: str,
     timestamp: int | None = None,
 ) -> dict[str, Any]:
+    """Manually constructs a cryptographic receipt for Red Team adversarial testing, bypassing the standard RiskGate evaluation."""
     timestamp = int(time.time()) if timestamp is None else timestamp
     keypair = risk_gate_keypair()
     binding = receipt_binding(
@@ -51,6 +53,7 @@ def manual_receipt(
 
 
 def apply_intent_patch(intent: dict[str, Any], patch: dict[str, Any] | None) -> dict[str, Any]:
+    """Mutates a valid intent payload with adversarial data to simulate prompt injection or compromised logic."""
     if not patch:
         return intent
     updated = json.loads(json.dumps(intent))
@@ -63,6 +66,7 @@ def apply_intent_patch(intent: dict[str, Any], patch: dict[str, Any] | None) -> 
 
 
 def classify_broker_response(response: dict[str, Any]) -> str:
+    """Parses the JSON-RPC response from the Rust broker to determine if the execution was allowed, blocked, or suspended."""
     if "result" in response:
         return "ALLOW"
     message = (response.get("error") or {}).get("message", "")
@@ -72,6 +76,7 @@ def classify_broker_response(response: dict[str, Any]) -> str:
 
 
 def run_attack(spec: dict[str, Any]) -> dict[str, Any]:
+    """Executes a single Red Team attack scenario, verifying the end-to-end cryptographic and IPC enforcement."""
     policy = dict(DEFAULT_POLICY)
     policy.update(spec.get("policy_patch", {}))
     gate = DeploymentRiskGate(policy)
@@ -131,12 +136,14 @@ def run_attack(spec: dict[str, Any]) -> dict[str, Any]:
 
 
 def expected_matches(expected: str, actual: str) -> bool:
+    """Evaluates if the actual enforcement outcome matches the expected security posture."""
     if expected == actual:
         return True
     return expected == "OUT_OF_SCOPE_ALLOWED" and actual == "ALLOW"
 
 
 def main() -> None:
+    """Entry point for the Red Team execution suite."""
     specs = load_attack_specs()
     rows = []
     failures = 0

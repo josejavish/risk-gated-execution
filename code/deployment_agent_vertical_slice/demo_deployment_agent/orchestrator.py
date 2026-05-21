@@ -26,6 +26,7 @@ POLICY_PATH = ROOT / "out" / "deployment-agent_riskgate.json"
 
 
 def build_mcp_payload(intent: dict[str, Any], receipt: dict[str, Any] | None) -> dict[str, Any]:
+    """Constructs a JSON-RPC payload for the MCP tool call, appending the cryptographic receipt out-of-band."""
     params: dict[str, Any] = {
         "name": intent["action_type"],
         "arguments": intent["arguments"],
@@ -41,6 +42,7 @@ def build_mcp_payload(intent: dict[str, Any], receipt: dict[str, Any] | None) ->
 
 
 def run_through_broker(payload: dict[str, Any], policy_path: Path = POLICY_PATH) -> tuple[dict[str, Any], str]:
+    """Executes the target tool through the Rust MCP stdio broker, enforcing the IPC isolation boundary."""
     if not BROKER_BIN.exists():
         raise RuntimeError(f"Broker binary not found: {BROKER_BIN}. Run `make build-broker` first.")
 
@@ -74,6 +76,7 @@ def run_through_broker(payload: dict[str, Any], policy_path: Path = POLICY_PATH)
 
 
 def run_demo(evidence_profile: str = "healthy") -> int:
+    """Executes the end-to-end Risk-Gated deployment flow, demonstrating middleware intent evaluation and IPC interception."""
     gate = DeploymentRiskGate()
     gate.write_broker_policy(POLICY_PATH)
 
@@ -104,6 +107,7 @@ def run_demo(evidence_profile: str = "healthy") -> int:
 
 
 def main() -> None:
+    """Entry point for the Red Team execution suite."""
     parser = argparse.ArgumentParser(description="Run the risk-gated deployment demo.")
     parser.add_argument("--evidence-profile", default="healthy")
     args = parser.parse_args()

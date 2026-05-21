@@ -7,6 +7,7 @@ import sys
 
 
 def handle_tool_call(request: dict) -> dict:
+    """Processes incoming JSON-RPC tool calls, mocking a successful deployment payload."""
     params = request.get("params") or {}
     arguments = params.get("arguments") or {}
     return {
@@ -22,6 +23,7 @@ def handle_tool_call(request: dict) -> dict:
 
 
 def main() -> None:
+    """Entry point for the mock deployment tool, continuously reading JSON-RPC requests from stdin."""
     for line in sys.stdin:
         if not line.strip():
             continue

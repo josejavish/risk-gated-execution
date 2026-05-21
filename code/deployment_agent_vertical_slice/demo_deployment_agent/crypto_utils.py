@@ -36,6 +36,7 @@ class DemoKeyPair:
 
     @property
     def public_key_b64(self) -> str:
+        """Returns the raw Ed25519 public key encoded in Base64 for deterministic network transport."""
         return base64.b64encode(
             self.public_key.public_bytes(
                 encoding=Encoding.Raw,
@@ -45,11 +46,13 @@ class DemoKeyPair:
 
 
 def risk_gate_keypair() -> DemoKeyPair:
+    """Generates the deterministic Ed25519 keypair for the RiskGate middleware. In production, this must be derived from a KMS/HSM."""
     private_key = Ed25519PrivateKey.from_private_bytes(RISK_GATE_SEED)
     return DemoKeyPair(private_key=private_key, public_key=private_key.public_key())
 
 
 def evidence_keypair() -> DemoKeyPair:
+    """Generates the deterministic Ed25519 keypair representing the external Evidence Provider (e.g., ServiceNow, Datadog)."""
     private_key = Ed25519PrivateKey.from_private_bytes(EVIDENCE_SEED)
     return DemoKeyPair(private_key=private_key, public_key=private_key.public_key())
 
@@ -60,6 +63,7 @@ def canonical_json(value: Any) -> str:
 
 
 def sha256_hex(value: str) -> str:
+    """Computes the SHA-256 digest of a UTF-8 string, returning the hex representation for receipt binding."""
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
@@ -80,17 +84,20 @@ def receipt_binding(
 
 
 def sign_receipt_hash(binding: str, keypair: DemoKeyPair) -> str:
+    """Cryptographically signs the deterministic intent binding using Ed25519, proving RiskGate authorization."""
     digest = hashlib.sha256(binding.encode("utf-8")).digest()
     signature = keypair.private_key.sign(digest)
     return base64.b64encode(signature).decode("ascii")
 
 
 def sign_json_document(document: dict[str, Any], keypair: DemoKeyPair) -> str:
+    """Signs a JSON document strictly using RFC 8785 canonicalization to prevent serialization malleability attacks."""
     signature = keypair.private_key.sign(canonical_json(document).encode("utf-8"))
     return base64.b64encode(signature).decode("ascii")
 
 
 def verify_json_signature(document: dict[str, Any], signature_b64: str, public_key_b64: str) -> bool:
+    """Verifies an Ed25519 signature over an RFC 8785 canonicalized JSON document, enforcing strict cryptographic provenance."""
     public_key = Ed25519PublicKey.from_public_bytes(base64.b64decode(public_key_b64))
     signature = base64.b64decode(signature_b64)
     public_key.verify(signature, canonical_json(document).encode("utf-8"))

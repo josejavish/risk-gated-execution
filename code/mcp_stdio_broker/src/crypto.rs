@@ -13,6 +13,7 @@ pub enum GateDecision {
 // provide this through GateConfig from KMS/SPIRE, not from a compiled constant.
 const DEFAULT_PUBLIC_KEY_B64: &str = "Q+Li0/tLGOaAtoGDhg7Uq/Eic6Gl+IOuFUguDz5R+kI=";
 
+/// Returns the current UNIX epoch timestamp in seconds for TTL and freshness evaluation.
 fn now_epoch_seconds() -> i64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -20,12 +21,14 @@ fn now_epoch_seconds() -> i64 {
         .unwrap_or_default()
 }
 
+/// Evaluates if the intent's target service exists within the explicitly authorized L7 boundary.
 fn target_is_authorized(target: &str, authorized_targets: &[String]) -> bool {
     authorized_targets
         .iter()
         .any(|authorized| authorized == "*" || authorized == target)
 }
 
+/// Recursively scans a JSON payload for destructive SQL or configuration commands (e.g., DROP, DELETE).
 fn json_contains_string(value: &serde_json::Value, needle_uppercase: &str) -> bool {
     match value {
         serde_json::Value::String(s) => s.to_uppercase().contains(needle_uppercase),
@@ -39,6 +42,7 @@ fn json_contains_string(value: &serde_json::Value, needle_uppercase: &str) -> bo
     }
 }
 
+/// Recursively extracts a boolean flag from a JSON object (used for strict dry-run enforcement).
 fn json_bool(value: &serde_json::Value, key: &str) -> Option<bool> {
     match value {
         serde_json::Value::Object(map) => {
@@ -52,6 +56,8 @@ fn json_bool(value: &serde_json::Value, key: &str) -> Option<bool> {
     }
 }
 
+/// Core execution boundary. Verifies the Ed25519 cryptographic receipt, enforcing RFC 8785 canonicalization, 
+/// TTL freshness, target authorization, and action constraints before granting L7 execution.
 pub fn verify_receipt(
     receipt: &crate::models::EvidenceReceipt,
     target_tool: &str,
@@ -201,6 +207,7 @@ mod tests {
     use rand_core::OsRng;
     use serde_json::json;
 
+    /// Generates an in-memory testing configuration mimicking the control plane policy.
     fn get_dummy_config() -> GateConfig {
         GateConfig {
             agent_id: "test".to_string(),
@@ -213,9 +220,11 @@ mod tests {
         }
     }
 
+    /// Generates a valid JSON payload for cryptographic testing.
     fn get_valid_arguments() -> serde_json::Value {
         json!({"artifact": "v43"})
     }
+
 
     fn generate_test_data() -> (EvidenceReceipt, String) {
         let mut csprng = OsRng;
@@ -254,6 +263,7 @@ mod tests {
         (receipt, pub_key_b64)
     }
 
+
     fn verify_receipt_with_key(
         receipt: &EvidenceReceipt,
         target_tool: &str,
@@ -267,6 +277,7 @@ mod tests {
     }
 
     #[test]
+
     fn test_valid_receipt() {
         let (receipt, pub_key) = generate_test_data();
         let args = get_valid_arguments();
@@ -278,6 +289,7 @@ mod tests {
     }
 
     #[test]
+
     fn test_tampered_signature() {
         let (mut receipt, pub_key) = generate_test_data();
         receipt.signature.replace_range(0..1, "X");
@@ -290,6 +302,7 @@ mod tests {
     }
 
     #[test]
+
     fn test_tampered_payload() {
         let (receipt, pub_key) = generate_test_data();
         let args = json!({"artifact": "v99"});
@@ -301,6 +314,7 @@ mod tests {
     }
 
     #[test]
+
     fn test_tampered_timestamp() {
         let (mut receipt, pub_key) = generate_test_data();
         receipt.timestamp += 10000;
@@ -313,6 +327,7 @@ mod tests {
     }
 
     #[test]
+
     fn test_invalid_base64() {
         let (mut receipt, pub_key) = generate_test_data();
         receipt.signature = "invalid_base64!!!".to_string();
@@ -325,6 +340,7 @@ mod tests {
     }
 
     #[test]
+
     fn test_taint_tracking_killswitch() {
         let (receipt, pub_key) = generate_test_data();
         let args = json!({"artifact": "v43; DROP TABLE users;"});
@@ -336,6 +352,7 @@ mod tests {
     }
 
     #[test]
+
     fn test_unauthorized_target_blocks_before_signature() {
         let (mut receipt, pub_key) = generate_test_data();
         receipt.target = "production-root-ca".to_string();
@@ -348,6 +365,7 @@ mod tests {
     }
 
     #[test]
+
     fn test_action_mismatch_blocks_before_signature() {
         let (receipt, pub_key) = generate_test_data();
         let args = get_valid_arguments();
@@ -359,6 +377,7 @@ mod tests {
     }
 
     #[test]
+
     fn test_expired_receipt_blocks() {
         let (mut receipt, pub_key) = generate_test_data();
         receipt.timestamp = now_epoch_seconds() - 3600;
