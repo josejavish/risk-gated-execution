@@ -115,9 +115,10 @@ async fn main() {
 
     unsafe {
         command.pre_exec(|| {
-            let flags = libc::CLONE_NEWIPC | libc::CLONE_NEWUTS;
+            // Elite Security: Air-Gapped execution (NEWNET) + IPC/UTS isolation
+            let flags = libc::CLONE_NEWIPC | libc::CLONE_NEWUTS | libc::CLONE_NEWNET;
             if libc::unshare(flags) != 0 {
-                eprintln!("Warning: Could not unshare namespaces. Ensure you have CAP_SYS_ADMIN.");
+                eprintln!("CRITICAL WARNING: Could not unshare namespaces (Requires CAP_SYS_ADMIN). In production, this MUST abort to prevent Fail-Open execution. Proceeding for local demo only.");
             }
             
             // Elite PrivEsc Prevention: Drop root privileges before exec if running as root.

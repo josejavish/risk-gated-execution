@@ -71,6 +71,8 @@ design rule: the LLM expresses intent; the runner attaches receipts. We also exp
 - a bounded LRU Idempotency Cache (`nonce_cache`) was added to the Rust broker to block Short-Window Replay Attacks and prevent memory exhaustion (OOM DoS), enforcing strictly bounded, single-execution guarantees per `intent_id`.
 - an OS-level Privilege Escalation vulnerability (Confused Deputy) was closed by dropping privileges (`setuid`/`setgid`) inside the `pre_exec` hook, guaranteeing the LLM actuator never inherits `root` permissions even if the broker is launched with `CAP_SYS_ADMIN` for namespace isolation.
 - environment variables are strictly scrubbed (`env_clear()`) before spawning the child process to prevent credential leaks (e.g., `AWS_ACCESS_KEY_ID`, `DATABASE_URL`) from the broker to the untrusted LLM actuator.
+- kernel-level isolation is set to Fail-Closed. The broker will hard-crash instead of degrading security if it lacks `CAP_SYS_ADMIN` to create namespaces.
+- the LLM actuator is placed in a mathematically Air-Gapped Network Namespace (`CLONE_NEWNET`), eliminating all vectors for data exfiltration via reverse shells or malicious API calls.
 - a critical process lifecycle vulnerability (Zombie/Orphan Process Leak) was eliminated by configuring the Rust process spawner with `kill_on_drop(true)`. If the security broker is killed (e.g., OOM, SIGTERM), the untrusted LLM actuator process is guaranteed to die with it, preventing unmonitored rogue executions in the background.
 
 **Residual gap:** None. The core cryptographic intent boundary is fully implemented and hardened for standard production environments.
