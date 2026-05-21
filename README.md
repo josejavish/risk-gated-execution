@@ -54,7 +54,7 @@ make redteam
 The RiskGate is designed to reduce adoption friction. It exports a standard OpenAI Tool JSON schema, allowing you to inject it as middleware into existing orchestrators like LangChain or the OpenAI SDK.
 
 ## Authors & Review
-Designed by José Javier Sánchez Hidalgo. 
+Designed by José Javier Sánchez Hidalgo ([ORCID: 0009-0007-3062-3574](https://orcid.org/0009-0007-3062-3574)). 
 Read the `RED_TEAM_PUBLICATION_REVIEW.md` for a candid assessment of the architecture's current limits.
 
 ## License

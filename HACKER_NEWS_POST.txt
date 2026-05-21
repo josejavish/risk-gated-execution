@@ -1,0 +1,41 @@
+### HACKER NEWS SUBMISSION GUIDE ###
+
+URL TO VISIT: https://news.ycombinator.com/submit
+
+--- 1. WHAT TO PUT IN THE "title" FIELD ---
+
+Show HN: A Rust IPC broker to sandbox and risk-gate LLM agent execution
+
+--- 2. WHAT TO PUT IN THE "url" FIELD ---
+
+https://github.com/josejavish/risk-gated-execution
+
+--- 3. LEAVE THE "text" FIELD BLANK ---
+
+(When submitting a URL, HN doesn't allow text in the main post).
+
+--- 4. WHAT TO PUT IN THE FIRST COMMENT (After submitting) ---
+Copy the text below exactly:
+
+Hi HN,
+
+I’ve been working on the infrastructure problem of LLM agents with write access. 
+
+Currently, the industry relies heavily on prompt guardrails or coarse static IAM roles to stop agents from doing destructive things. That breaks down quickly in production. If an agent can execute a local tool to deploy code or drop a database, "the model was instructed not to" isn't an acceptable control.
+
+I built this reference architecture to move the security boundary completely out of the LLM’s context window and down to the OS/Kernel level. 
+
+**How it works:**
+1. The agent expresses an intent. A middleware (RiskGate) evaluates it against policies and fresh operational evidence (e.g., PagerDuty health, change windows). If it passes, it issues a cryptographically signed receipt (Ed25519 over RFC 8785 canonical JSON).
+2. A Rust out-of-process broker wraps the actual execution tool. It intercepts the `stdio` JSON-RPC traffic, verifies the receipt, checks TTLs, and blocks concurrent short-window replay attacks using an optimistic BTreeMap lock (mitigating TOCTOU races).
+
+**OS-Level Sandboxing:**
+To prevent the LLM actuator from escaping or exfiltrating data, the Rust broker spawns the child process with some strict constraints before `exec`:
+- **Air-Gapped:** Uses Linux namespaces (`CLONE_NEWNET`, `CLONE_NEWIPC`).
+- **Privilege Drop:** Forces `setuid/setgid` to an unprivileged user even if the broker requires `CAP_SYS_ADMIN`.
+- **Resource Limits:** Enforces `rlimit` (memory/processes) to prevent fork bombs.
+- **Zombie Prevention:** Binds the child’s lifecycle to the broker via `prctl(PR_SET_PDEATHSIG, SIGKILL)`.
+
+I’ve included a `RED_TEAM_PUBLICATION_REVIEW.md` in the repo detailing exactly what this mitigates, and more importantly, what it deliberately doesn’t solve (e.g., upstream reasoning poisoning, compromised evidence providers).
+
+I would love to get your technical feedback, especially from SREs and platform engineers running autonomous workloads.

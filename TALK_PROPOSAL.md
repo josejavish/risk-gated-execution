@@ -101,7 +101,7 @@ platform.
 
 ## Speaker Bio
 
-José Javier Sánchez Hidalgo is a Chief Technical Manager of IT Infrastructure focused on
+José Javier Sánchez Hidalgo ([ORCID: 0009-0007-3062-3574](https://orcid.org/0009-0007-3062-3574)) is a Principal Infrastructure Engineer focused on
 governable, reliable, and operable AI infrastructure. His work sits at the
 intersection of platform engineering, SRE, security controls, and enterprise AI
 systems. He is interested in moving agent safety from prompt convention into

@@ -1,0 +1,29 @@
+TITLE:
+Show r/rust: An IPC broker for air-gapping and risk-gating LLM agents
+
+BODY:
+Hi r/rust, 
+
+I'm exploring the limits of OS-level sandboxing for LLM agents, and I’d love a brutal code review from this community on the Rust architecture I've put together.
+
+**The Context:**
+Currently, the industry relies heavily on LLM prompt guardrails to stop agents from doing destructive things. That breaks down quickly in production. If an agent can execute a local tool to deploy code or drop a database, "the model was instructed not to" isn't a real security boundary.
+
+I built this reference architecture to move the security boundary completely out of the LLM’s context window and down to the OS/Kernel level using Rust.
+
+**The Rust Broker Architecture:**
+1. A Python middleware (RiskGate) evaluates the agent's intent against fresh operational evidence. If it passes, it issues a cryptographically signed receipt (Ed25519 over RFC 8785 canonical JSON).
+2. The Rust out-of-process broker wraps the actual execution tool. It intercepts the `stdio` JSON-RPC traffic, offloads the cryptographic receipt verification to a `tokio::task::spawn_blocking` pool (to prevent async reactor starvation), checks TTLs, and blocks concurrent short-window replay attacks using an optimistic `BTreeMap` lock (mitigating TOCTOU races).
+
+**OS-Level Sandboxing (The fun part):**
+To prevent the LLM actuator from escaping or exfiltrating data, the Rust broker spawns the child process with some strict constraints before `exec`:
+- **Air-Gapped:** Uses Linux namespaces (`CLONE_NEWNET`, `CLONE_NEWIPC`).
+- **Privilege Drop:** Forces `setuid/setgid` to an unprivileged user even if the broker requires `CAP_SYS_ADMIN` to create the namespaces.
+- **Resource Limits:** Enforces `rlimit` (memory/processes) to prevent fork bombs.
+- **Zombie Prevention:** Binds the child’s lifecycle to the broker via `prctl(PR_SET_PDEATHSIG, SIGKILL)` instead of just relying on Rust's `Drop`.
+
+I’ve included a `RED_TEAM_PUBLICATION_REVIEW.md` in the repo detailing exactly what this mitigates, and what it deliberately doesn’t solve (e.g., upstream reasoning poisoning).
+
+**The Code:** https://github.com/josejavish/risk-gated-execution
+
+I would love to get your technical feedback, especially on the `main.rs` IPC handling, the Tokio asynchronous error handling, and the namespace isolation implementation. Have I missed any obvious DoS vectors?

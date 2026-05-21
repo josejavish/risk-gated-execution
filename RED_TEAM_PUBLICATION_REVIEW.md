@@ -2,7 +2,7 @@
 
 **Date:** 2026-05-21  
 **Target:** Risk-Gated Execution Architecture & Rust IPC Broker  
-**Auditor:** José Javier Sánchez Hidalgo
+**Auditor:** José Javier Sánchez Hidalgo ([ORCID: 0009-0007-3062-3574](https://orcid.org/0009-0007-3062-3574))
 
 ## Executive Summary
 
