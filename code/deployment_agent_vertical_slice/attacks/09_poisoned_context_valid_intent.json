@@ -1,0 +1,10 @@
+{
+  "id": "poisoned_context_valid_intent",
+  "description": "A valid-looking intent from poisoned context is intentionally documented as outside execution-gate scope.",
+  "expected": "OUT_OF_SCOPE_ALLOWED",
+  "evidence_profile": "healthy",
+  "mutation": "poisoned_context_valid_intent",
+  "intent_patch": {
+    "source_context": "untrusted_confluence_page"
+  }
+}

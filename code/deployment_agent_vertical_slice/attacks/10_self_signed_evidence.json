@@ -1,0 +1,7 @@
+{
+  "id": "self_signed_evidence",
+  "description": "The RiskGate must reject evidence signed by an untrusted evidence key.",
+  "expected": "RISK_GATE_BLOCK",
+  "evidence_profile": "healthy",
+  "mutation": "self_signed_evidence"
+}

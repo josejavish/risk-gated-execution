@@ -1,0 +1,14 @@
+/home/jsanchhi/patent_fortress/3_BENCHMARK_LAB/mcp_stdio_broker/target/debug/deps/serde-9a20aae4b614992b.d: /home/jsanchhi/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /home/jsanchhi/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /home/jsanchhi/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /home/jsanchhi/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /home/jsanchhi/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /home/jsanchhi/patent_fortress/3_BENCHMARK_LAB/mcp_stdio_broker/target/debug/build/serde-be62b92d4562b0f4/out/private.rs
+
+/home/jsanchhi/patent_fortress/3_BENCHMARK_LAB/mcp_stdio_broker/target/debug/deps/libserde-9a20aae4b614992b.rlib: /home/jsanchhi/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /home/jsanchhi/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /home/jsanchhi/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /home/jsanchhi/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /home/jsanchhi/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /home/jsanchhi/patent_fortress/3_BENCHMARK_LAB/mcp_stdio_broker/target/debug/build/serde-be62b92d4562b0f4/out/private.rs
+
+/home/jsanchhi/patent_fortress/3_BENCHMARK_LAB/mcp_stdio_broker/target/debug/deps/libserde-9a20aae4b614992b.rmeta: /home/jsanchhi/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /home/jsanchhi/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /home/jsanchhi/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /home/jsanchhi/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /home/jsanchhi/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /home/jsanchhi/patent_fortress/3_BENCHMARK_LAB/mcp_stdio_broker/target/debug/build/serde-be62b92d4562b0f4/out/private.rs
+
+/home/jsanchhi/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs:
+/home/jsanchhi/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs:
+/home/jsanchhi/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs:
+/home/jsanchhi/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs:
+/home/jsanchhi/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs:
+/home/jsanchhi/patent_fortress/3_BENCHMARK_LAB/mcp_stdio_broker/target/debug/build/serde-be62b92d4562b0f4/out/private.rs:
+
+# env-dep:OUT_DIR=/home/jsanchhi/patent_fortress/3_BENCHMARK_LAB/mcp_stdio_broker/target/debug/build/serde-be62b92d4562b0f4/out

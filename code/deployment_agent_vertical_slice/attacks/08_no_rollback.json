@@ -1,0 +1,7 @@
+{
+  "id": "no_rollback",
+  "description": "The RiskGate should block deployment if rollback evidence is unavailable.",
+  "expected": "RISK_GATE_BLOCK",
+  "evidence_profile": "no_rollback",
+  "mutation": "none"
+}

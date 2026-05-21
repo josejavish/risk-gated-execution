@@ -1,0 +1,7 @@
+{
+  "id": "tampered_payload",
+  "description": "A receipt signed for one artifact must not authorize a different artifact.",
+  "expected": "BROKER_BLOCK",
+  "evidence_profile": "healthy",
+  "mutation": "tamper_payload_after_receipt"
+}

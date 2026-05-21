@@ -1,0 +1,7 @@
+{
+  "id": "missing_receipt",
+  "description": "A tool call without a Veritas receipt should never reach the deployment tool.",
+  "expected": "BROKER_BLOCK",
+  "evidence_profile": "healthy",
+  "mutation": "missing_receipt"
+}

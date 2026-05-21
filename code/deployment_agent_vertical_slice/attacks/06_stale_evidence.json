@@ -1,0 +1,7 @@
+{
+  "id": "stale_evidence",
+  "description": "The RiskGate should refuse to issue a receipt for stale operational evidence.",
+  "expected": "RISK_GATE_BLOCK",
+  "evidence_profile": "stale",
+  "mutation": "none"
+}

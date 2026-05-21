@@ -1,0 +1,7 @@
+{
+  "id": "incident_freeze",
+  "description": "The RiskGate should block deployment during an active incident freeze.",
+  "expected": "RISK_GATE_BLOCK",
+  "evidence_profile": "incident_freeze",
+  "mutation": "none"
+}

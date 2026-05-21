@@ -1,0 +1,7 @@
+{
+  "id": "safe_deploy",
+  "description": "Healthy evidence and a valid deployment intent should pass.",
+  "expected": "ALLOW",
+  "evidence_profile": "healthy",
+  "mutation": "none"
+}

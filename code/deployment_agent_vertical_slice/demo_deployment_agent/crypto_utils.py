@@ -1,0 +1,97 @@
+"""Shared signing utilities for the deployment vertical slice.
+
+The demo uses deterministic Ed25519 keys so the repository is reproducible.
+Production systems should provision signing keys through KMS/SPIRE and rotate
+them outside the application repository.
+"""
+
+from __future__ import annotations
+
+import base64
+import hashlib
+import json
+import jcs
+from dataclasses import dataclass
+from typing import Any
+
+from cryptography.hazmat.primitives.asymmetric.ed25519 import (
+    Ed25519PrivateKey,
+    Ed25519PublicKey,
+)
+from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+
+
+RISK_GATE_SEED = bytes.fromhex(
+    "1f1e1d1c1b1a191817161514131211100f0e0d0c0b0a09080706050403020100"
+)
+EVIDENCE_SEED = bytes.fromhex(
+    "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+)
+
+
+@dataclass(frozen=True)
+class DemoKeyPair:
+    private_key: Ed25519PrivateKey
+    public_key: Ed25519PublicKey
+
+    @property
+    def public_key_b64(self) -> str:
+        return base64.b64encode(
+            self.public_key.public_bytes(
+                encoding=Encoding.Raw,
+                format=PublicFormat.Raw,
+            )
+        ).decode("ascii")
+
+
+def risk_gate_keypair() -> DemoKeyPair:
+    private_key = Ed25519PrivateKey.from_private_bytes(RISK_GATE_SEED)
+    return DemoKeyPair(private_key=private_key, public_key=private_key.public_key())
+
+
+def evidence_keypair() -> DemoKeyPair:
+    private_key = Ed25519PrivateKey.from_private_bytes(EVIDENCE_SEED)
+    return DemoKeyPair(private_key=private_key, public_key=private_key.public_key())
+
+
+def canonical_json(value: Any) -> str:
+    """Returns RFC 8785 canonical JSON string."""
+    return jcs.canonicalize(value).decode("utf-8")
+
+
+def sha256_hex(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+def receipt_binding(
+    *,
+    intent_id: str,
+    action_type: str,
+    target: str,
+    payload: dict[str, Any],
+    evidence_digest: str,
+    timestamp: int,
+) -> str:
+    payload_str = canonical_json(payload)
+    return (
+        f"intent:{intent_id}|action:{action_type}|target:{target}|"
+        f"payload:{payload_str}|evidence:{evidence_digest}|ts:{timestamp}"
+    )
+
+
+def sign_receipt_hash(binding: str, keypair: DemoKeyPair) -> str:
+    digest = hashlib.sha256(binding.encode("utf-8")).digest()
+    signature = keypair.private_key.sign(digest)
+    return base64.b64encode(signature).decode("ascii")
+
+
+def sign_json_document(document: dict[str, Any], keypair: DemoKeyPair) -> str:
+    signature = keypair.private_key.sign(canonical_json(document).encode("utf-8"))
+    return base64.b64encode(signature).decode("ascii")
+
+
+def verify_json_signature(document: dict[str, Any], signature_b64: str, public_key_b64: str) -> bool:
+    public_key = Ed25519PublicKey.from_public_bytes(base64.b64decode(public_key_b64))
+    signature = base64.b64decode(signature_b64)
+    public_key.verify(signature, canonical_json(document).encode("utf-8"))
+    return True

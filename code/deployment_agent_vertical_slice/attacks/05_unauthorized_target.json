@@ -1,0 +1,10 @@
+{
+  "id": "unauthorized_target",
+  "description": "Even a signed receipt cannot authorize a target outside the broker policy.",
+  "expected": "BROKER_BLOCK",
+  "evidence_profile": "healthy",
+  "mutation": "signed_unauthorized_target",
+  "intent_patch": {
+    "target": "production-root-ca"
+  }
+}

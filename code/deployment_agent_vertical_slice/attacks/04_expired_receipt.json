@@ -1,0 +1,10 @@
+{
+  "id": "expired_receipt",
+  "description": "A stale signed receipt should be rejected by broker-side TTL enforcement.",
+  "expected": "BROKER_BLOCK",
+  "evidence_profile": "healthy",
+  "mutation": "expired_receipt",
+  "policy_patch": {
+    "evidence_ttl_seconds": 1
+  }
+}

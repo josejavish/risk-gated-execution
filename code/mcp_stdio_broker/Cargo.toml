@@ -1,0 +1,32 @@
+[package]
+name = "mcp_stdio_broker"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+ed25519-dalek = { version = "2.2.0", features = ["rand_core"] }
+base64 = "0.22"
+sha2 = "0.10"
+tokio = { version = "1.0", features = ["full"] }
+tokio-util = { version = "0.7", features = ["codec"] }
+futures = "0.3"
+libc = "0.2"
+rand_core = { version = "0.6", features = ["std"] }
+rand = "0.8"
+notify = "6.1.1"
+arc-swap = "1.7.1"
+serde_yaml = "0.9.34"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+jcs-canonicalize = "0.1.0"
+serde_jcs = "0.2.0"
+
+[[bin]]
+name = "print_sig"
+path = "print_sig.rs"
+
+[[bin]]
+name = "mcp_stdio_broker"
+path = "src/main.rs"
