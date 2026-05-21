@@ -69,6 +69,7 @@ design rule: the LLM expresses intent; the runner attaches receipts. We also exp
 - the vertical slice pins the trusted evidence provider key, so self-signed evidence is blocked.
 - payload canonicalization was upgraded to strict RFC 8785 (JSON Canonicalization Scheme) in both Python and Rust to prevent serialization mutation attacks.
 - a bounded LRU Idempotency Cache (`nonce_cache`) was added to the Rust broker to block Short-Window Replay Attacks and prevent memory exhaustion (OOM DoS), enforcing strictly bounded, single-execution guarantees per `intent_id`.
+- a Time-of-Check to Time-of-Use (TOCTOU) concurrency vulnerability was discovered in the anti-replay mechanism. It was sealed by implementing a Two-Phase Commit / Optimistic Locking strategy in a `BTreeMap` cache, blocking concurrent replays at the exact nanosecond of ingestion, and guaranteeing $O(\log N)$ pruning of expired nonces.
 - an OS-level Privilege Escalation vulnerability (Confused Deputy) was closed by dropping privileges (`setuid`/`setgid`) inside the `pre_exec` hook, guaranteeing the LLM actuator never inherits `root` permissions even if the broker is launched with `CAP_SYS_ADMIN` for namespace isolation.
 - environment variables are strictly scrubbed (`env_clear()`) before spawning the child process to prevent credential leaks (e.g., `AWS_ACCESS_KEY_ID`, `DATABASE_URL`) from the broker to the untrusted LLM actuator.
 - kernel-level isolation is set to Fail-Closed. The broker will hard-crash instead of degrading security if it lacks `CAP_SYS_ADMIN` to create namespaces.

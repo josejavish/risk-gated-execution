@@ -199,41 +199,57 @@ async fn main() {
                                     let args_clone = params.arguments.clone();
                                     let config_clone = current_config.clone();
                                     
-                                    // Idempotency Check (Short-Window Replay Attack Prevention)
+                                    // Idempotency Check & Optimistic Lock (TOCTOU Prevention)
                                     let mut is_replay = false;
                                     {
-                                        let cache = nonce_cache_clone.lock().unwrap();
+                                        let mut cache = nonce_cache_clone.lock().unwrap();
                                         if cache.values().any(|v| v.contains(&receipt_clone.intent_id)) {
                                             is_replay = true;
+                                        } else {
+                                            // Optimistically reserve the intent_id to prevent concurrent replays
+                                            cache.entry(receipt_clone.timestamp).or_insert_with(Vec::new).push(receipt_clone.intent_id.clone());
                                         }
                                     }
 
                                     if is_replay {
-                                        tracing::warn!(intent_id = %receipt_clone.intent_id, "Verification BLOCKED: Replay Attack Detected");
-                                        error_msg = format!("RiskGate Blocked: Replay Attack Detected (intent_id {} already executed)", receipt_clone.intent_id);
+                                        tracing::warn!(intent_id = %receipt_clone.intent_id, "Verification BLOCKED: Concurrent Replay Attack Detected");
+                                        error_msg = format!("RiskGate Blocked: Replay Attack Detected (intent_id {} already executing or executed)", receipt_clone.intent_id);
                                     } else {
                                         // Offload heavy cryptographic signature verification to a blocking thread pool
                                         let decision = tokio::task::spawn_blocking(move || {
                                             crypto::verify_receipt(&receipt_clone, &name_clone, &args_clone, &config_clone)
-                                        }).await.unwrap();
+                                        }).await.unwrap_or_else(|_| crypto::GateDecision::Block("Internal Crypto Thread Panic".to_string()));
 
                                         match decision {
                                             crypto::GateDecision::Allow => {
                                                 tracing::info!(intent_id = %receipt.intent_id, "Verification SUCCESS. RiskGate Approved.");
-                                                let mut cache = nonce_cache_clone.lock().unwrap();
-                                                cache.entry(receipt.timestamp).or_insert_with(Vec::new).push(receipt.intent_id.clone());
                                                 
-                                                // Deterministically prune expired nonces
+                                                let mut cache = nonce_cache_clone.lock().unwrap();
+                                                // Deterministically prune expired nonces (O(log N))
                                                 let expire_time = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs() as i64 - current_config.evidence_ttl_seconds;
                                                 cache.retain(|&ts, _| ts >= expire_time);
                                                 
                                                 allow = true;
                                             }
                                             crypto::GateDecision::Block(reason) => {
+                                                // Rollback optimistic lock
+                                                {
+                                                    let mut cache = nonce_cache_clone.lock().unwrap();
+                                                    if let Some(vec) = cache.get_mut(&receipt.timestamp) {
+                                                        vec.retain(|id| id != &receipt.intent_id);
+                                                    }
+                                                }
                                                 tracing::warn!(intent_id = %receipt.intent_id, "Verification BLOCKED: {}", reason);
                                                 error_msg = format!("RiskGate Blocked: {}", reason);
                                             }
                                             crypto::GateDecision::Suspend(reason) => {
+                                                // Rollback optimistic lock
+                                                {
+                                                    let mut cache = nonce_cache_clone.lock().unwrap();
+                                                    if let Some(vec) = cache.get_mut(&receipt.timestamp) {
+                                                        vec.retain(|id| id != &receipt.intent_id);
+                                                    }
+                                                }
                                                 tracing::warn!(intent_id = %receipt.intent_id, "Verification SUSPENDED: {}", reason);
                                                 err_code = -32001;
                                                 error_msg = format!("RiskGate Suspended: {}", reason);
