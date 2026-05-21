@@ -91,11 +91,9 @@ It represents a deployment API without introducing cloud dependencies.
 
 ## Production Gaps
 
-The next production-grade improvements are:
+While the runtime enforces strict cryptographic verification (RFC 8785) and OS-level sandboxing (Namespaces, `CLONE_NEWNET`, `rlimit`), the next production-grade improvements for the surrounding ecosystem are:
 
 - replace demo keys with KMS/SPIRE provisioning;
-- use RFC 8785 or typed protobuf for signature stability;
 - ingest signed telemetry from Prometheus/OpenTelemetry or deployment systems;
 - add integration with a real agent runner;
-- add seccomp/cgroup isolation and egress policy;
 - add source-aware context provenance for prompt-injection resistance.

@@ -42,6 +42,8 @@ agent intent
 - RiskGate evidence verification;
 - RiskGate policy checks for trusted evidence signer, target, action, health, change window, rollback, incident freeze, and dry-run posture;
 - signed execution receipt bound to intent, action, target, payload, evidence digest, and timestamp;
+- strict RFC 8785 JSON Canonicalization (JCS) to prevent signature malleability;
+- complete OS-level process sandboxing via Linux Namespaces (`CLONE_NEWNET`, `setuid`, `PDEATHSIG`, `rlimit`);
 - Rust broker verification before local `stdio` tool execution;
 - red-team cases for missing receipt, tampered payload, expired receipt, unauthorized target, stale evidence, incident freeze, no rollback, self-signed evidence, and poisoned reasoning.
 
@@ -49,9 +51,7 @@ agent intent
 
 - production key management;
 - signed telemetry from real monitoring systems;
-- RFC 8785 canonical JSON across arbitrary payloads;
 - real agent framework integration;
-- complete process sandboxing;
 - prompt-injection provenance tracking.
 
 The point is to show a concrete end-to-end control boundary, not to claim full
