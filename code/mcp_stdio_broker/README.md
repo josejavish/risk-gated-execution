@@ -31,7 +31,7 @@ Assumptions:
 - the JSON-RPC protocol is line-delimited JSON;
 - the signed payload is serialized deterministically.
 
-Production requirements outside this prototype:
+Production requirements outside this architecture:
 
 - RFC 8785 canonical JSON or typed protobuf/gRPC for signature stability;
 - seccomp, cgroups, and workload identity for stronger process containment;
@@ -89,3 +89,4 @@ Run the container (listening on stdin):
 make docker-run
 ```
 *(Pass JSON-RPC payloads to stdin to see the broker in action).*
+ in action).*

@@ -184,7 +184,7 @@ The software objection is protocol and serialization fragility.
 
 JSON-RPC framing can change. Streaming can appear. JSON canonicalization across languages can fail. A broker that assumes too much about payload shape can become a fragile L7 parser.
 
-The design response is to keep the prototype explicit about its assumptions:
+The design response is to keep the architecture explicit about its assumptions:
 
 - line-delimited JSON-RPC only;
 - deterministic JSON serialization for the fixture;

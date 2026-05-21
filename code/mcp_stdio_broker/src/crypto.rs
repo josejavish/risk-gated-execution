@@ -9,7 +9,7 @@ pub enum GateDecision {
     Suspend(String),
 }
 
-// Demo public key for the local reproducible fixture. Production deployments should
+// Pinned public key for the local reproducible fixture. Production deployments should
 // provide this through GateConfig from KMS/SPIRE, not from a compiled constant.
 const DEFAULT_PUBLIC_KEY_B64: &str = "Q+Li0/tLGOaAtoGDhg7Uq/Eic6Gl+IOuFUguDz5R+kI=";
 

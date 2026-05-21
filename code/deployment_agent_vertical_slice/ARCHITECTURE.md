@@ -93,7 +93,7 @@ It represents a deployment API without introducing cloud dependencies.
 
 While the runtime enforces strict cryptographic verification (RFC 8785) and OS-level sandboxing (Namespaces, `CLONE_NEWNET`, `rlimit`), the next production-grade improvements for the surrounding ecosystem are:
 
-- replace demo keys with KMS/SPIRE provisioning;
+- integrate the deterministic keys with KMS/SPIRE provisioning;
 - ingest signed telemetry from Prometheus/OpenTelemetry or deployment systems;
 - add integration with a real agent runner;
 - add source-aware context provenance for prompt-injection resistance.

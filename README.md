@@ -35,7 +35,7 @@ This architecture bridges the gap between AI lab demos and Fortune 500 complianc
 - `ARTICLE_DRAFT.md`: The full thesis on why software fails and cryptography is required for agent safety.
 - `RED_TEAM_PUBLICATION_REVIEW.md`: The security and architectural audit of this implementation, explicitly listing mitigated attacks and remaining out-of-scope vulnerabilities.
 
-## Quick Start (Demo)
+## Quick Start (Validation Suite)
 
 You need Rust (`cargo`) and Python 3 installed.
 
@@ -60,3 +60,4 @@ Read the `RED_TEAM_PUBLICATION_REVIEW.md` for a candid assessment of the archite
 ## License
 
 This project is dual-licensed under either the [MIT License](LICENSE-MIT) or the [Apache License, Version 2.0](LICENSE-APACHE), at your option. This is the standard licensing model for the Rust ecosystem, designed to provide maximum freedom for individual developers while offering explicit patent protections for enterprise adoption.
+enterprise adoption.
