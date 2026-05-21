@@ -2,7 +2,7 @@
 
 *Moving safety from prompt policy to runtime enforcement*
 
-*By Jose Javier, Chief Technical Manager of IT Infrastructure*
+*By José Javier Sánchez Hidalgo, Chief Technical Manager of IT Infrastructure*
 
 Enterprise AI agents are crossing a line that traditional automation rarely crossed: they are moving from recommending actions to executing them. The moment an agent can call a deployment API, rotate a secret, issue a refund, change a firewall rule, or write to a production database, "the model was instructed not to do that" stops being an acceptable control.
 

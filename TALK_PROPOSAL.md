@@ -101,7 +101,7 @@ platform.
 
 ## Speaker Bio
 
-Jose Javier is a Chief Technical Manager of IT Infrastructure focused on
+José Javier Sánchez Hidalgo is a Chief Technical Manager of IT Infrastructure focused on
 governable, reliable, and operable AI infrastructure. His work sits at the
 intersection of platform engineering, SRE, security controls, and enterprise AI
 systems. He is interested in moving agent safety from prompt convention into
