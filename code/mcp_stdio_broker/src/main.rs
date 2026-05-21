@@ -110,7 +110,8 @@ async fn main() {
         .args(target_args)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
-        .stderr(Stdio::inherit());
+        .stderr(Stdio::inherit())
+        .kill_on_drop(true); // Elite Security: Prevent Zombie/Orphan Actuator Process Leak
 
     unsafe {
         command.pre_exec(|| {
