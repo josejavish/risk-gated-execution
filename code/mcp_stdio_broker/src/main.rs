@@ -4,7 +4,8 @@ mod models;
 use arc_swap::ArcSwap;
 use futures::StreamExt;
 use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
-use std::collections::HashSet;
+use lru::LruCache;
+use std::num::NonZeroUsize;
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -59,7 +60,7 @@ async fn main() {
     let target_args = &args[2..];
 
     // Idempotency Cache to prevent Short-Window Replay Attacks
-    let nonce_cache: Arc<Mutex<HashSet<String>>> = Arc::new(Mutex::new(HashSet::new()));
+    let nonce_cache: Arc<Mutex<LruCache<String, ()>>> = Arc::new(Mutex::new(LruCache::new(NonZeroUsize::new(10000).unwrap())));
 
     // RCU Epochs (Lock-Free Hot Reloading)
     // The policy is stored in an ArcSwap, allowing the worker threads to pull
@@ -191,7 +192,7 @@ async fn main() {
                                         ) {
                                             crypto::GateDecision::Allow => {
                                                 tracing::info!(intent_id = %receipt.intent_id, "Verification SUCCESS. RiskGate Approved.");
-                                                cache.insert(receipt.intent_id.clone());
+                                                cache.put(receipt.intent_id.clone(), ());
                                                 allow = true;
                                             }
                                             crypto::GateDecision::Block(reason) => {

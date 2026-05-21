@@ -68,7 +68,7 @@ design rule: the LLM expresses intent; the runner attaches receipts. We also exp
 - inbound and child-output JSON-RPC lines are bounded.
 - the vertical slice pins the trusted evidence provider key, so self-signed evidence is blocked.
 - payload canonicalization was upgraded to strict RFC 8785 (JSON Canonicalization Scheme) in both Python and Rust to prevent serialization mutation attacks.
-- an in-memory Idempotency Cache (`nonce_cache`) was added to the Rust broker to block Short-Window Replay Attacks by enforcing single-execution guarantees per `intent_id`.
+- a bounded LRU Idempotency Cache (`nonce_cache`) was added to the Rust broker to block Short-Window Replay Attacks and prevent memory exhaustion (OOM DoS), enforcing strictly bounded, single-execution guarantees per `intent_id`.
 
 **Residual gap:** None. The core cryptographic intent boundary is fully implemented and hardened for standard production environments.
 
