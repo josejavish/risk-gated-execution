@@ -223,7 +223,7 @@ async fn main() {
                                             is_replay = true;
                                         } else {
                                             // Optimistically reserve the intent_id to prevent concurrent replays
-                                            cache.entry(receipt_clone.timestamp).or_insert_with(Vec::new).push(receipt_clone.intent_id.clone());
+                                            cache.entry(receipt_clone.timestamp).or_default().push(receipt_clone.intent_id.clone());
                                         }
                                     }
 
