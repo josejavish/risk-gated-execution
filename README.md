@@ -24,7 +24,7 @@ Beyond cryptographic verification, the Rust broker enforces military-grade OS bo
 - **Concurrency Hardening:** Employs a Two-Phase Commit / Optimistic Locking strategy in a `BTreeMap` to prevent Time-of-Check to Time-of-Use (TOCTOU) replay attacks.
 
 ## Enterprise Use Cases
-This architecture bridges the gap between AI lab demos and Fortune 500 compliance. It is designed for high-stakes environments where probabilistic failures are unacceptable:
+This architecture is designed for environments where probabilistic failures are unacceptable:
 
 - **Automated Incident Remediation (SRE):** An autonomous agent diagnoses a production outage and decides to restart a core database. Before the execution tool runs, the RiskGate intercepts the intent, verifies that a Sev-1 incident is actually active in PagerDuty, confirms we are not in a global change freeze, and ensures a rollback snapshot receipt is attached.
 - **Autonomous Cloud Provisioning (Platform/FinOps):** A DevOps agent tasked with scaling infrastructure attempts to provision 50 new GPU instances. The gate pauses execution, validating the intent against real-time budget APIs and Datadog load metrics, blocking the action if it breaches the daily CapEx limit without a cryptographic human-approval receipt.
@@ -62,4 +62,6 @@ Read the `RED_TEAM_PUBLICATION_REVIEW.md` for a candid assessment of the archite
 ## License
 
 This project is dual-licensed under either the [MIT License](LICENSE-MIT) or the [Apache License, Version 2.0](LICENSE-APACHE), at your option. This is the standard licensing model for the Rust ecosystem, designed to provide maximum freedom for individual developers while offering explicit patent protections for enterprise adoption.
+enterprise adoption.
+ patent protections for enterprise adoption.
 enterprise adoption.

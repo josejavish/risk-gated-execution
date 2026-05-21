@@ -31,7 +31,7 @@ The implementation achieves severe isolation between the untrusted agent reasoni
 **Status:** Secured & Hardened.
 
 - **Fail-Closed Isolation:** The broker strictly requires `CAP_SYS_ADMIN` to construct isolated Linux namespaces. If namespace creation fails, the broker hard-crashes (`std::process::exit(1)`) rather than degrading into a fail-open execution state.
-- **Air-Gapped Execution:** The untrusted LLM actuator is spawned inside an isolated Network Namespace (`CLONE_NEWNET`), physically severing its internet access and eliminating all vectors for data exfiltration via reverse shells or malicious API calls.
+- **Network Isolation:** The untrusted LLM actuator is spawned inside an isolated Network Namespace (`CLONE_NEWNET`), preventing network access from the child process and mitigating data exfiltration via reverse shells or malicious API calls.
 - **Privilege Abdication (Confused Deputy):** The broker explicitly drops root privileges (`setuid`/`setgid`) inside the `pre_exec` hook. The child actuator never inherits `root` permissions.
 - **Environment Scrubbing:** All environment variables are purged (`env_clear()`) before spawning the child process, preventing the leak of infrastructure credentials (e.g., `AWS_ACCESS_KEY_ID`).
 
