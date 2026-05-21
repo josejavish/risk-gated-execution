@@ -116,6 +116,18 @@ async fn main() {
             if libc::unshare(flags) != 0 {
                 eprintln!("Warning: Could not unshare namespaces. Ensure you have CAP_SYS_ADMIN.");
             }
+            
+            // Elite PrivEsc Prevention: Drop root privileges before exec if running as root.
+            if libc::geteuid() == 0 {
+                // In production, fetch UID/GID from config. Using 1000 as standard unprivileged user.
+                let target_uid = std::env::var("RGE_CHILD_UID").unwrap_or_else(|_| "1000".to_string()).parse::<u32>().unwrap_or(1000);
+                let target_gid = std::env::var("RGE_CHILD_GID").unwrap_or_else(|_| "1000".to_string()).parse::<u32>().unwrap_or(1000);
+                
+                if libc::setgid(target_gid) != 0 || libc::setuid(target_uid) != 0 {
+                    eprintln!("CRITICAL: Failed to drop root privileges. Aborting child execution to prevent Privilege Escalation.");
+                    std::process::exit(1);
+                }
+            }
             Ok(())
         });
     }
