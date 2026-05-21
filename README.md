@@ -1,5 +1,7 @@
 # Risk-Gated Execution for Agentic Systems
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20327313.svg)](https://doi.org/10.5281/zenodo.20327313)
+
 An architectural pattern and Rust IPC broker to move LLM agent safety from probabilistic prompt policies to deterministic runtime enforcement.
 
 > **Status: Architectural Prototype.** This repository demonstrates the core concepts of out-of-band cryptographic receipts and IPC authorization boundaries for LLM agents. It is intended for research, platform engineering design, and red-team review, not as a drop-in production binary.
