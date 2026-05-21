@@ -75,12 +75,12 @@ platform.
 - Full gate and ablations.
 - What the numbers mean and what they do not mean.
 
-**18-24 min: Enforcement Topology**
+**18-24 min: Enforcement Topology & Sandboxing**
 
 - Envoy/WASM for HTTP and service-mesh APIs.
 - Rust `stdio` broker for local MCP-style tools.
-- Why the broker is an authorization boundary, not a complete sandbox.
 - Out-of-band receipts so the LLM does not handle cryptography.
+- Kernel-Level Isolation: Why authorization must be paired with Air-Gapping (`CLONE_NEWNET`), privilege dropping (`setuid`), and resource limits (`rlimit`) to form a true execution sandbox.
 
 **24-28 min: Red Team**
 
