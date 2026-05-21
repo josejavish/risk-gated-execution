@@ -132,11 +132,15 @@ async fn main() {
         while let Some(res) = framed_stdout.next().await {
             match res {
                 Ok(line) => {
-                    stdout
-                        .write_all(format!("{}\n", line).as_bytes())
-                        .await
-                        .unwrap();
-                    stdout.flush().await.unwrap();
+                    let out_str = format!("{}\n", line);
+                    if let Err(e) = stdout.write_all(out_str.as_bytes()).await {
+                        tracing::warn!("Failed to write to stdout: {}", e);
+                        break;
+                    }
+                    if let Err(e) = stdout.flush().await {
+                        tracing::warn!("Failed to flush stdout: {}", e);
+                        break;
+                    }
                 }
                 Err(e) => {
                     tracing::warn!("Child stdout exceeded broker frame limit: {}", e);
@@ -217,19 +221,28 @@ async fn main() {
                                         message: error_msg,
                                     },
                                 };
-                                let err_json = serde_json::to_string(&err_res).unwrap();
-                                stdout_err
-                                    .write_all(format!("{}\n", err_json).as_bytes())
-                                    .await
-                                    .unwrap();
-                                stdout_err.flush().await.unwrap();
+                                let err_json = serde_json::to_string(&err_res).unwrap_or_else(|_| "{\"jsonrpc\":\"2.0\",\"error\":{\"code\":-32603,\"message\":\"Internal JSON error\"}}".to_string());
+                                if let Err(e) = stdout_err.write_all(format!("{}\n", err_json).as_bytes()).await {
+                                    tracing::error!("Failed to write error to stdout: {}", e);
+                                    break;
+                                }
+                                if let Err(e) = stdout_err.flush().await {
+                                    tracing::error!("Failed to flush error to stdout: {}", e);
+                                    break;
+                                }
                                 continue;
                             }
                         }
                     }
 
-                    child_stdin.write_all(line.as_bytes()).await.unwrap();
-                    child_stdin.flush().await.unwrap();
+                    if let Err(e) = child_stdin.write_all(line.as_bytes()).await {
+                        tracing::error!("Failed to write to child stdin: {}", e);
+                        break;
+                    }
+                    if let Err(e) = child_stdin.flush().await {
+                        tracing::error!("Failed to flush child stdin: {}", e);
+                        break;
+                    }
                 }
                 Err(e) => {
                     let err_res = models::JsonRpcResponse {
@@ -240,12 +253,9 @@ async fn main() {
                             message: format!("Broker IO Error or Payload Too Large: {}", e),
                         },
                     };
-                    let err_json = serde_json::to_string(&err_res).unwrap();
-                    stdout_err
-                        .write_all(format!("{}\n", err_json).as_bytes())
-                        .await
-                        .unwrap();
-                    stdout_err.flush().await.unwrap();
+                    let err_json = serde_json::to_string(&err_res).unwrap_or_else(|_| "{\"jsonrpc\":\"2.0\",\"error\":{\"code\":-32603,\"message\":\"Internal JSON error\"}}".to_string());
+                    let _ = stdout_err.write_all(format!("{}\n", err_json).as_bytes()).await;
+                    let _ = stdout_err.flush().await;
                     break;
                 }
             }
