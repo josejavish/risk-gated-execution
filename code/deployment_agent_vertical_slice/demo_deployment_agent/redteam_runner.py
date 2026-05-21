@@ -109,6 +109,15 @@ def run_attack(spec: dict[str, Any]) -> dict[str, Any]:
         response, _ = run_through_broker(build_mcp_payload(intent, None))
         return {"actual": classify_broker_response(response), "reason": json.dumps(response, sort_keys=True)}
 
+    if mutation == "replay_attack":
+        decision = gate.evaluate(intent, signed_evidence)
+        if not decision.allowed:
+            return {"actual": "RISK_GATE_BLOCK", "reason": decision.reason}
+        payload = build_mcp_payload(intent, decision.receipt)
+        # Send the same payload twice to the same broker instance
+        response, _ = run_through_broker([payload, payload])
+        return {"actual": classify_broker_response(response), "reason": json.dumps(response, sort_keys=True)}
+
     if mutation == "tamper_payload_after_receipt":
         decision = gate.evaluate(intent, signed_evidence)
         if not decision.allowed:

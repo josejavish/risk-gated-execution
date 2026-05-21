@@ -4,11 +4,12 @@ mod models;
 use arc_swap::ArcSwap;
 use futures::StreamExt;
 use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
+use std::collections::HashSet;
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use tokio::io::AsyncWriteExt;
 use tokio::process::Command;
 use tokio_util::codec::{FramedRead, LinesCodec};
@@ -56,6 +57,9 @@ async fn main() {
 
     let target_cmd = &args[1];
     let target_args = &args[2..];
+
+    // Idempotency Cache to prevent Short-Window Replay Attacks
+    let nonce_cache: Arc<Mutex<HashSet<String>>> = Arc::new(Mutex::new(HashSet::new()));
 
     // RCU Epochs (Lock-Free Hot Reloading)
     // The policy is stored in an ArcSwap, allowing the worker threads to pull
@@ -142,6 +146,7 @@ async fn main() {
         }
     });
 
+    let nonce_cache_clone = nonce_cache.clone();
     let stdin_task = tokio::spawn(async move {
         let stdin = tokio::io::stdin();
         let codec = LinesCodec::new_with_max_length(MAX_JSON_RPC_LINE_BYTES);
@@ -168,24 +173,32 @@ async fn main() {
                                     // We emit structured logs linking the LLM intent ID to the kernel enforcement
                                     tracing::info!(intent_id = %receipt.intent_id, tool = %params.name, "Verifying cryptographic receipt for tool");
 
-                                    match crypto::verify_receipt(
-                                        receipt,
-                                        &params.name,
-                                        &params.arguments,
-                                        &current_config,
-                                    ) {
-                                        crypto::GateDecision::Allow => {
-                                            tracing::info!(intent_id = %receipt.intent_id, "Verification SUCCESS. RiskGate Approved.");
-                                            allow = true;
-                                        }
-                                        crypto::GateDecision::Block(reason) => {
-                                            tracing::warn!(intent_id = %receipt.intent_id, "Verification BLOCKED: {}", reason);
-                                            error_msg = format!("RiskGate Blocked: {}", reason);
-                                        }
-                                        crypto::GateDecision::Suspend(reason) => {
-                                            tracing::warn!(intent_id = %receipt.intent_id, "Verification SUSPENDED: {}", reason);
-                                            err_code = -32001;
-                                            error_msg = format!("RiskGate Suspended: {}", reason);
+                                    // Idempotency Check (Short-Window Replay Attack Prevention)
+                                    let mut cache = nonce_cache_clone.lock().unwrap();
+                                    if cache.contains(&receipt.intent_id) {
+                                        tracing::warn!(intent_id = %receipt.intent_id, "Verification BLOCKED: Replay Attack Detected");
+                                        error_msg = format!("RiskGate Blocked: Replay Attack Detected (intent_id {} already executed)", receipt.intent_id);
+                                    } else {
+                                        match crypto::verify_receipt(
+                                            receipt,
+                                            &params.name,
+                                            &params.arguments,
+                                            &current_config,
+                                        ) {
+                                            crypto::GateDecision::Allow => {
+                                                tracing::info!(intent_id = %receipt.intent_id, "Verification SUCCESS. RiskGate Approved.");
+                                                cache.insert(receipt.intent_id.clone());
+                                                allow = true;
+                                            }
+                                            crypto::GateDecision::Block(reason) => {
+                                                tracing::warn!(intent_id = %receipt.intent_id, "Verification BLOCKED: {}", reason);
+                                                error_msg = format!("RiskGate Blocked: {}", reason);
+                                            }
+                                            crypto::GateDecision::Suspend(reason) => {
+                                                tracing::warn!(intent_id = %receipt.intent_id, "Verification SUSPENDED: {}", reason);
+                                                err_code = -32001;
+                                                error_msg = format!("RiskGate Suspended: {}", reason);
+                                            }
                                         }
                                     }
                                 } else if !current_config.require_receipt {

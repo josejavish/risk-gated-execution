@@ -41,10 +41,12 @@ def build_mcp_payload(intent: dict[str, Any], receipt: dict[str, Any] | None) ->
     }
 
 
-def run_through_broker(payload: dict[str, Any], policy_path: Path = POLICY_PATH) -> tuple[dict[str, Any], str]:
+def run_through_broker(payload: dict[str, Any] | list[dict[str, Any]], policy_path: Path = POLICY_PATH) -> tuple[dict[str, Any], str]:
     """Executes the target tool through the Rust MCP stdio broker, enforcing the IPC isolation boundary."""
     if not BROKER_BIN.exists():
         raise RuntimeError(f"Broker binary not found: {BROKER_BIN}. Run `make build-broker` first.")
+
+    payloads = payload if isinstance(payload, list) else [payload]
 
     env = dict(os.environ)
     env["RGE_BROKER_POLICY_PATH"] = str(policy_path)
@@ -63,16 +65,21 @@ def run_through_broker(payload: dict[str, Any], policy_path: Path = POLICY_PATH)
     assert proc.stdin is not None
     assert proc.stdout is not None
     assert proc.stderr is not None
-    proc.stdin.write(json.dumps(payload, sort_keys=True) + "\n")
-    proc.stdin.flush()
-    first_line = proc.stdout.readline().strip() or "{}"
+    
+    responses = []
+    for p in payloads:
+        proc.stdin.write(json.dumps(p, sort_keys=True) + "\n")
+        proc.stdin.flush()
+        first_line = proc.stdout.readline().strip() or "{}"
+        responses.append(json.loads(first_line))
+        
     proc.terminate()
     try:
         _, stderr = proc.communicate(timeout=2)
     except subprocess.TimeoutExpired:
         proc.kill()
         _, stderr = proc.communicate(timeout=2)
-    return json.loads(first_line), stderr
+    return responses[-1], stderr
 
 
 def run_demo(evidence_profile: str = "healthy") -> int:
